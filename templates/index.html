@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>PixelToPrognosis - Cervical Cancer Decision Fusion</title>
+  <style>
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: url('{{ url_for("static", filename="images/bg.jpg") }}') no-repeat center center fixed;
+        min-height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .container {
+        background: rgba(255, 255, 255, 0.25); /* Semi-transparent */
+        backdrop-filter: blur(10px); /* Glass blur effect */
+        -webkit-backdrop-filter: blur(10px); /* Safari support */
+        padding: 2.5em 3em;
+        border-radius: 16px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        width: 100%;
+        max-width: 650px;
+        border: 1px solid rgba(255, 255, 255, 0.4); /* subtle border */
+    }
+
+    h1 {
+      text-align: center;
+      color: #6c5ce7;
+      font-size: 3em;
+      font-style: italic;
+      margin-bottom: 1.2em;
+    }
+
+    form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.3em;
+    }
+
+    label {
+      font-weight: bold;
+      color: #2c3e50;
+    }
+
+    input[type="file"] {
+      padding: 0.7em;
+      border: 2px solid #6c5ce7;
+      border-radius: 8px;
+      background: #f4f6fa;
+      transition: border-color 0.3s ease;
+    }
+
+    input[type="file"]:focus {
+      border-color: #a29bfe;
+      outline: none;
+    }
+
+    button {
+      background: #6c5ce7;
+      color: white;
+      border: none;
+      padding: 0.9em;
+      border-radius: 8px;
+      font-size: 1em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+    button:hover {
+      background: #4834d4;
+      transform: scale(1.03);
+    }
+
+    .result, .error {
+      margin-top: 1.5em;
+      padding: 1em 1.2em;
+      border-left: 6px solid;
+      border-radius: 6px;
+      font-size: 1.05em;
+      line-height: 1.5;
+    }
+
+    .result {
+      background: #dff9fb;
+      border-color: #00b894;
+      color: #2d3436;
+    }
+
+    .error {
+      background: #ffe6e6;
+      border-color: #e17055;
+      color: #d63031;
+    }
+
+    /* Risk Table Styles */
+    .risk-table-container {
+      margin-top: 2em;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      padding: 1.5em;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .risk-table-container h3 {
+      margin-bottom: 1em;
+      text-align: center;
+      font-size: 1.3em;
+    }
+
+    .risk-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .risk-table th {
+      background: #6c5ce7;
+      color: white;
+      padding: 12px 8px;
+      text-align: left;
+    }
+
+    .risk-table td {
+      padding: 10px 8px;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .risk-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .risk-table tr.no-risk {
+      background: rgba(0, 184, 148, 0.1);
+    }
+
+    .risk-table tr.low-risk {
+      background: rgba(255, 193, 7, 0.1);
+    }
+
+    .risk-table tr.medium-risk {
+      background: rgba(255, 165, 0, 0.1);
+    }
+
+    .risk-table tr.high-risk {
+      background: rgba(220, 53, 69, 0.1);
+    }
+
+    .risk-table tr:hover {
+      background: rgba(108, 92, 231, 0.1);
+      transition: background 0.3s ease;
+    }
+
+    /* Cell Info Panel Styles */
+    .cell-info-panel {
+      margin-top: 2em;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 12px;
+      padding: 1.5em;
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(10px);
+    }
+
+    .cell-info-panel h3 {
+      color: #2c3e50;
+      margin-bottom: 1em;
+      text-align: center;
+      font-size: 1.4em;
+      border-bottom: 2px solid #6c5ce7;
+      padding-bottom: 0.5em;
+    }
+
+    .cell-info-content {
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 8px;
+      padding: 1.5em;
+      line-height: 1.6;
+      color: #2c3e50;
+    }
+
+    .cell-info-content h4 {
+      color: #6c5ce7;
+      margin-bottom: 0.8em;
+      font-size: 1.2em;
+    }
+
+    .cell-info-content .description,
+    .cell-info-content .significance,
+    .cell-info-content .action {
+      margin-bottom: 1.5em;
+    }
+
+    .cell-info-content .significance ul {
+      margin: 0.5em 0;
+      padding-left: 1.5em;
+    }
+
+    .cell-info-content .significance li {
+      margin-bottom: 0.3em;
+    }
+
+    .cell-info-content .action {
+      background: rgba(108, 92, 231, 0.1);
+      padding: 1em;
+      border-radius: 6px;
+      border-left: 4px solid #6c5ce7;
+    }
+
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(5px);
+    }
+
+    .modal-content {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(15px);
+      margin: 5% auto;
+      padding: 0;
+      border-radius: 16px;
+      width: 90%;
+      max-width: 800px;
+      max-height: 85vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    .modal-header {
+      background: linear-gradient(135deg, #6c5ce7, #a29bfe);
+      color: white;
+      padding: 1.5em 2em;
+      border-radius: 16px 16px 0 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      font-size: 1.8em;
+      font-weight: 600;
+    }
+
+    .close {
+      color: white;
+      font-size: 2em;
+      font-weight: bold;
+      cursor: pointer;
+      transition: opacity 0.3s ease;
+    }
+
+    .close:hover {
+      opacity: 0.7;
+    }
+
+    .modal-body {
+      padding: 2em;
+      color: #2c3e50;
+    }
+
+    .modal-body .result {
+      margin-bottom: 1.5em;
+      padding: 1.2em;
+      border-radius: 8px;
+      background: rgba(108, 92, 231, 0.05);
+      border-left: 4px solid #6c5ce7;
+    }
+
+    .modal-body .cell-info-panel {
+      margin-top: 1.5em;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 12px;
+      padding: 1.5em;
+      border: 1px solid rgba(108, 92, 231, 0.2);
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 20px;
+        padding: 2em;
+      }
+      
+      .risk-table {
+        font-size: 0.8em;
+      }
+      
+      .risk-table th,
+      .risk-table td {
+        padding: 8px 4px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Pixel To Prognosis</h1>
+    <!-- Cell Type Risk Table -->
+    <div class="risk-table-container">
+      <h3>Cell Type Risk Assessment Guide</h3>
+      <table class="risk-table">
+        <thead>
+          <tr>
+            <th>Cell Class</th>
+            <th>Risk Level</th>
+            <th>Indicator</th>
+            <th>Explanation</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="no-risk">
+            <td>Superficial-Intermediate</td>
+            <td>No Risk</td>
+            <td><span style="display:inline-block;width:12px;height:12px;background:#00b894;border-radius:50%;"></span></td>
+            <td>Healthy cells</td>
+          </tr>
+          <tr class="low-risk">
+            <td>Metaplastic</td>
+            <td>Low Risk</td>
+            <td><span style="display:inline-block;width:12px;height:12px;background:#fbc531;border-radius:50%;"></span></td>
+            <td>Normal transformation</td>
+          </tr>
+          <tr class="medium-risk">
+            <td>Parabasal</td>
+            <td>Medium Risk</td>
+            <td><span style="display:inline-block;width:12px;height:12px;background:#e67e22;border-radius:50%;"></span></td>
+            <td>Inflammation/STD</td>
+          </tr>
+          <tr class="high-risk">
+            <td>Koilocytotic</td>
+            <td>High Risk</td>
+            <td><span style="display:inline-block;width:12px;height:12px;background:#d63031;border-radius:50%;"></span></td>
+            <td>HPV infection</td>
+          </tr>
+          <tr class="high-risk">
+            <td>Dyskeratotic</td>
+            <td>High Risk</td>
+            <td><span style="display:inline-block;width:12px;height:12px;background:#c0392b;border-radius:50%;"></span></td>
+            <td>Pre-cancerous / cancerous</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    {% if accuracy is not none %}
+      <div class="result"><strong>Fusion Model Accuracy:</strong> {{ accuracy | round(4) }}</div>
+    {% endif %}
+    {% if clinical_accuracy is not none %}
+      <div class="result"><strong>Clinical Model Accuracy:</strong> {{ clinical_accuracy | round(4) }}</div>
+    {% endif %}
+
+    <form id="upload-form" enctype="multipart/form-data">
+      <label for="file">Upload a .bmp image:</label>
+      <input type="file" id="file" name="file" accept=".bmp" />
+
+      <label for="csv">Upload clinical data (.csv):</label>
+      <input type="file" id="csv" name="csv" accept=".csv" />
+
+      <button type="submit">Predict</button>
+    </form>
+
+    
+
+    <div id="output"></div>
+  </div>
+
+  <!-- Prediction Result Popup Modal -->
+  <div id="result-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Prediction Results</h2>
+        <span class="close" onclick="closeModal()">&times;</span>
+      </div>
+      <div class="modal-body" id="modal-content">
+        <!-- Results will be inserted here -->
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const form = document.getElementById('upload-form');
+    const output = document.getElementById('output');
+
+    // Function to generate detailed cell information HTML
+    function generateCellInfoHTML(cellInfo, analysisType) {
+      if (!cellInfo || !cellInfo.title) return '';
+      
+      let html = `
+        <div class="cell-info-panel" style="display: block; margin-top: 1em;">
+          <h3>${analysisType} - ${cellInfo.title}</h3>
+          <div class="cell-info-content">
+            <div class="description">
+              <h4>Description:</h4>
+              <p>${cellInfo.description}</p>
+            </div>
+            <div class="significance">
+              <h4>Clinical Significance:</h4>
+              <ul>
+                ${cellInfo.clinical_significance ? cellInfo.clinical_significance.map(item => `<li>${item}</li>`).join('') : ''}
+              </ul>
+            </div>
+            <div class="action">
+              <h4>Clinical Action:</h4>
+              <p>${cellInfo.clinical_action}</p>
+            </div>
+            <div class="risk-info">
+              <h4>Risk Assessment:</h4>
+              <p><span style="color: ${cellInfo.risk_color}; font-weight: bold;">${cellInfo.risk_emoji} ${cellInfo.risk_level}</span></p>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      return html;
+    }
+
+    // Function to show modal
+    function showModal(content) {
+      const modal = document.getElementById('result-modal');
+      const modalContent = document.getElementById('modal-content');
+      modalContent.innerHTML = content;
+      modal.style.display = 'block';
+    }
+
+    // Function to close modal
+    function closeModal() {
+      const modal = document.getElementById('result-modal');
+      modal.style.display = 'none';
+    }
+
+    // Close modal when clicking outside of it
+    window.onclick = function(event) {
+      const modal = document.getElementById('result-modal');
+      if (event.target === modal) {
+        closeModal();
+      }
+    }
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      output.innerHTML = '';
+
+      const fileInput = document.getElementById('file');
+      const csvInput = document.getElementById('csv');
+
+      if (!fileInput.files.length && !csvInput.files.length) {
+        showModal(`<div class='error'><strong>Error:</strong> Please upload at least one file (image or CSV).</div>`);
+        return;
+      }
+
+      const formData = new FormData();
+      if (fileInput.files.length) formData.append('file', fileInput.files[0]);
+      if (csvInput && csvInput.files.length) formData.append('csv', csvInput.files[0]);
+
+      try {
+        const response = await fetch('/predict', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        
+        // Debug: log the response structure
+        console.log('Response data:', data);
+
+        if (response.ok) {
+          let html = '';
+          
+          // Handle different response structures
+          if (data.fusion_prediction) {
+            // Combined analysis (both image and clinical)
+            html += `<div class='result'><strong>Predicted Cell Class:</strong> ${data.fusion_prediction.cell_class}</div>`;
+            
+                      // Add image prediction details
+          if (data.image_prediction) {
+            html += `<div class='result'><strong>Image Analysis:</strong> ${data.image_prediction.predicted_class} (Confidence: ${(data.image_prediction.confidence * 100).toFixed(1)}%)</div>`;
+            
+            // Add detailed cell information for image prediction
+            if (data.image_prediction.cell_info) {
+              html += generateCellInfoHTML(data.image_prediction.cell_info, 'Image Analysis');
+            }
+          }
+          
+
+            
+
+          } else {
+            // Single analysis (image only or clinical only)
+            if (data.cell_class) {
+              html += `<div class='result'><strong>Predicted Cell Class:</strong> ${data.cell_class}</div>`;
+            }
+            
+            // Add detailed cell information for single analysis
+            if (data.cell_info) {
+              html += generateCellInfoHTML(data.cell_info, data.prediction);
+            }
+          }
+          
+          showModal(html);
+        } else {
+          showModal(`<div class='error'><strong>Error:</strong> ${data.error || 'Unknown error'}</div>`);
+        }
+      } catch (err) {
+        showModal(`<div class='error'><strong>Error:</strong> ${err.message}</div>`);
+      }
+    };
+  </script>
+</body>
+</html>
+
+        
