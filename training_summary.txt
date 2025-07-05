@@ -1,0 +1,14 @@
+CERVICAL CELL CLASSIFICATION MODEL TRAINING SUMMARY
+============================================================
+
+Model Type: EfficientNetB0 + PSO + SVM
+Total Images: 4049
+Categories: ['im_Dyskeratotic', 'im_Koilocytotic', 'im_Metaplastic', 'im_Parabasal', 'im_Superficial-Intermediate']
+Feature Extraction: EfficientNetB0 with global average pooling
+Total Features: 1280
+Selected Features: 679
+Feature Reduction: 47.0%
+Test Accuracy: 0.3868312757201646
+Training Time: 6755.07977771759
+Pso Iterations: 50
+Pso Particles: 30

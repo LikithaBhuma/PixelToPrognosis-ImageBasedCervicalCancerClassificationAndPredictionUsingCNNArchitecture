@@ -1,0 +1,42 @@
+CLINICAL CERVICAL CANCER PREDICTION MODEL REPORT
+==================================================
+
+MODEL COMPARISON:
+--------------------
+Random Forest:
+  Accuracy: 0.9535
+  ROC AUC: 0.6251
+  CV Score: 0.9569 (+/- 0.0058)
+
+Gradient Boosting:
+  Accuracy: 0.9593
+  ROC AUC: 0.7411
+  CV Score: 0.9580 (+/- 0.0088)
+
+Logistic Regression:
+  Accuracy: 0.9593
+  ROC AUC: 0.5069
+  CV Score: 0.9557 (+/- 0.0059)
+
+SVM:
+  Accuracy: 0.9593
+  ROC AUC: 0.7563
+  CV Score: 0.9592 (+/- 0.0002)
+
+BEST MODEL: Gradient Boosting
+------------------------------
+Accuracy: 0.9593
+ROC AUC: 0.7411
+
+FEATURE IMPORTANCE:
+--------------------
+Hormonal Contraceptives (years): 0.2905
+Smokes (packs/year): 0.1247
+Num of pregnancies: 0.1240
+IUD (years): 0.1235
+Number of sexual partners: 0.1123
+Smokes (years): 0.0743
+STDs:vulvo-perineal condylomatosis: 0.0330
+STDs:HIV: 0.0221
+Dx:Cancer: 0.0208
+IUD: 0.0158
