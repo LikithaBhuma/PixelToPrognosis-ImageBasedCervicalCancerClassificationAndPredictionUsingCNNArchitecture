@@ -24,6 +24,8 @@ The model can classify cervical cells into 5 categories:
 
 ## 🚀 Quick Start
 
+## Dataset link:
+https://www.kaggle.com/datasets/prahladmehandiratta/cervical-cancer-largest-dataset-sipakmed
 ### Prerequisites
 
 - Python 3.8 or higher
